@@ -1,0 +1,2 @@
+Removed time field
+Moved to access DB for preprocessing down to only apple convos (AccessDB.PNG)
