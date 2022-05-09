@@ -1,6 +1,7 @@
 import spacy
 import pandas as pd
 from spacy.tokens import Doc
+from sklearn.model_selection import train_test_split
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -8,6 +9,8 @@ class Topic:
     def __init__(self):
         self.type = None
         self.trainingData = []
+        self.testingData = []
+
         self.model = None
 
     def Append(self, item):
@@ -23,10 +26,15 @@ class Topic:
         return self.model.similarity(inputDoc)
 
 topicData = {}
-inputDataFrame = pd.read_csv (r'.\testdb.csv')
+inputDataFrame = pd.read_csv (r'.\tempTest.csv')
 nlp = spacy.load("en_core_web_sm")
 
-for iter,row in inputDataFrame.iterrows():
+x_train, x_test, y_train, y_test = train_test_split(inputDataFrame["TYPE"],inputDataFrame["TEXT"], test_size=0.3)
+
+train = pd.concat([x_train,y_train],axis=1)
+test = pd.concat([x_test,y_test],axis=1)
+
+for iter,row in train.iterrows():
     type = row[0]
     contents = row[1]
 
@@ -45,6 +53,29 @@ for topic in topicData:
         bin.append(nlpDoc)
 
     topicData[topic].CreateDoc(bin)
+
+print("Trained!");
+
+score = 0
+counter = 0
+for iter,row in test.iterrows():
+    realType = row[0]
+    contents = nlp(row[1])
+
+    gTopic = "Unknown"
+    gTopicScore = 0.0
+    for top in topicData:
+        comparisonVal = topicData[top].ReturnSim(contents)
+
+        if comparisonVal > gTopicScore:
+            gTopic = top
+            gTopicScore = comparisonVal
+
+    if gTopic == realType:
+        score = score + 1
+    counter = counter + 1
+
+print("Accuracy: " + str(round((score / counter)*100,2)) + "%")
 
 while True:
     inVal = nlp(input())
