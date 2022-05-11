@@ -27,7 +27,11 @@ class Topic:
 
 topicData = {}
 inputDataFrame = pd.read_csv (r'.\tempTest.csv')
-nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("en_core_web_lg")
+
+#Preprocessing
+inputDataFrame['TEXT'] = inputDataFrame['TEXT'].str.replace("@AppleSupport", "")
+
 
 x_train, x_test, y_train, y_test = train_test_split(inputDataFrame["TYPE"],inputDataFrame["TEXT"], test_size=0.3)
 
@@ -54,7 +58,7 @@ for topic in topicData:
 
     topicData[topic].CreateDoc(bin)
 
-print("Trained!");
+print("Trained!")
 
 score = 0
 counter = 0
