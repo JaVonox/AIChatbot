@@ -26,11 +26,11 @@ class Topic:
         return self.model.similarity(inputDoc)
 
 topicData = {}
-inputDataFrame = pd.read_csv (r'.\tempTest.csv')
+inputDataFrame = pd.read_csv (r'.\Dataset\StackExchangeMoney.csv')
 nlp = spacy.load("en_core_web_lg")
 
 #Preprocessing
-inputDataFrame['TEXT'] = inputDataFrame['TEXT'].str.replace("@AppleSupport", "")
+#inputDataFrame['TEXT'] = inputDataFrame['TEXT'].str.replace("@AppleSupport", "")
 
 
 x_train, x_test, y_train, y_test = train_test_split(inputDataFrame["TYPE"],inputDataFrame["TEXT"], test_size=0.3)
