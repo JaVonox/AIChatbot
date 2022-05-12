@@ -58,8 +58,6 @@ for topic in topicData:
 
     topicData[topic].CreateDoc(bin)
 
-print("Trained!")
-
 score = 0
 counter = 0
 for iter,row in test.iterrows():
@@ -94,7 +92,7 @@ while True:
             gTopicScore = comparisonVal
 
     if gTopicScore > 0.3:
-        print("Expected topic: " + gTopic + " (similarity: " + str(round(gTopicScore,2)) + "%)")
+        print("Expected topic: " + gTopic + " (similarity: " + str(round(gTopicScore,2)*100) + "%)")
     else:
-        print("Unknown topic. Best guess: " + gTopic + " (similarity: " + str(round(gTopicScore,2)) + "%)")
+        print("Unknown topic. Best guess: " + gTopic + " (similarity: " + str(round(gTopicScore,2)*100) + "%)")
 
