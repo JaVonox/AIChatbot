@@ -14,6 +14,7 @@ joblib==1.1.0
 langcodes==3.3.0
 MarkupSafe==2.1.1
 murmurhash==1.0.7
+nltk==3.7
 numpy==1.22.3
 packaging==21.3
 pandas==1.4.2
@@ -35,7 +36,9 @@ spacy==3.3.0
 spacy-alignments==0.8.5
 spacy-legacy==3.0.9
 spacy-loggers==1.0.2
+spacytextblob==4.0.0
 srsly==2.4.3
+textblob==0.15.3
 thinc==8.0.15
 threadpoolctl==3.1.0
 tokenizers==0.12.1
