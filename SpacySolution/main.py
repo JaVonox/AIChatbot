@@ -52,9 +52,9 @@ def FormSentence(inVal,topic):
 def RemoveBadTokens(text):
     preProcText = nlp(text) #convert the text to doc preemptively
     concat = []
-    for token in preProcText: #Iterate through each token and remove the stop words and punctuation
-        if token.text not in nlp.Defaults.stop_words and not token.is_punct:
-            concat.append(token.text)
+    for t in preProcText: #Iterate through each token and remove the stop words and punctuation
+        if t.text not in nlp.Defaults.stop_words and not t.is_punct:
+            concat.append(t.text)
     outStr = " ".join(concat) #rejoin the text items and then return the string to be processed again
     return outStr
 
@@ -66,56 +66,48 @@ topicOutput = pd.read_csv(r'.\Dataset\Responses.csv') #Load outputs
 nlp = spacy.load("en_core_web_lg")
 nlp.add_pipe('spacytextblob') #adds sentiment analysis + objectivity to the pipeline
 
-l = 0
+x_train_q, x_test_q, y_train_q, y_test_q = train_test_split(inputDataFrame["TYPE"],inputDataFrame["TEXT"], test_size=0.3) #create questions training data
+train_q = pd.concat([x_train_q,y_train_q],axis=1)
+test_q = pd.concat([x_test_q,y_test_q],axis=1)
 
-while l < 100:
-    topicData = {}
-    x_train_q, x_test_q, y_train_q, y_test_q = train_test_split(inputDataFrame["TYPE"],inputDataFrame["TEXT"], test_size=0.3) #create questions training data
-    train_q = pd.concat([x_train_q,y_train_q],axis=1)
-    test_q = pd.concat([x_test_q,y_test_q],axis=1)
+for iter,row in train_q.iterrows():
+    type = row[0]
+    contents = row[1]
 
-    for iter,row in train_q.iterrows():
-        type = row[0]
-        contents = row[1]
+    if str(type) not in topicData.keys():
+        topicData[str(type)] = AIType()
 
-        if str(type) not in topicData.keys():
-            topicData[str(type)] = AIType()
+    topicData[str(type)].Append(RemoveBadTokens(contents))
 
-        topicData[str(type)].Append(RemoveBadTokens(contents))
+for topic in topicData:
+    classItem = topicData[topic]
+    bin = []
+    trainingSet = classItem.ReturnTrain()
 
-    for topic in topicData:
-        classItem = topicData[topic]
-        bin = []
-        trainingSet = classItem.ReturnTrain()
+    for x in trainingSet:
+        nlpDoc = nlp(x)
+        bin.append(nlpDoc)
 
-        for x in trainingSet:
-            nlpDoc = nlp(x)
-            bin.append(nlpDoc)
+    topicData[topic].CreateDoc(bin)
 
-        topicData[topic].CreateDoc(bin)
+score = 0
+counter = 0
+for iter,row in test_q.iterrows():
+    realType = row[0]
+    contents = nlp(RemoveBadTokens(row[1]))
 
-    score = 0
-    counter = 0
-    for iter,row in test_q.iterrows():
-        realType = row[0]
-        contents = nlp(RemoveBadTokens(row[1]))
+    gTopic = "Unknown"
+    gTopicScore = 0.0
+    for top in topicData:
+        comparisonVal = topicData[top].ReturnSim(contents)
 
-        gTopic = "Unknown"
-        gTopicScore = 0.0
-        for top in topicData:
-            comparisonVal = topicData[top].ReturnSim(contents)
+        if comparisonVal > gTopicScore:
+            gTopic = top
+            gTopicScore = comparisonVal
 
-            if comparisonVal > gTopicScore:
-                gTopic = top
-                gTopicScore = comparisonVal
-
-        if gTopic == realType:
-            score = score + 1
-        counter = counter + 1
-
-    print(str(round((score / counter) * 100, 4)))
-
-    l = l + 1
+    if gTopic == realType:
+        score = score + 1
+    counter = counter + 1
 
 print("Accuracy: " + str(round((score / counter)*100,2)) + "%")
 
