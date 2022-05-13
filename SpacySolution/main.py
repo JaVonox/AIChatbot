@@ -49,62 +49,80 @@ def FormSentence(inVal,topic):
 
     print(sentence)
 
+def RemoveBadTokens(text):
+    preProcText = nlp(text) #convert the text to doc preemptively
+    concat = []
+    for token in preProcText: #Iterate through each token and remove the stop words and punctuation
+        if token.text not in nlp.Defaults.stop_words and not token.is_punct:
+            concat.append(token.text)
+    outStr = " ".join(concat) #rejoin the text items and then return the string to be processed again
+    return outStr
+
+
 topicData = {}
 
 inputDataFrame = pd.read_csv(r'.\Dataset\StackExchangeMoney.csv') #Load questions
 topicOutput = pd.read_csv(r'.\Dataset\Responses.csv') #Load outputs
 nlp = spacy.load("en_core_web_lg")
-nlp.add_pipe('spacytextblob') #adds sentiment analysis + subjectivity to the pipeline
+nlp.add_pipe('spacytextblob') #adds sentiment analysis + objectivity to the pipeline
 
-x_train_q, x_test_q, y_train_q, y_test_q = train_test_split(inputDataFrame["TYPE"],inputDataFrame["TEXT"], test_size=0.3) #create questions training data
-train_q = pd.concat([x_train_q,y_train_q],axis=1)
-test_q = pd.concat([x_test_q,y_test_q],axis=1)
+l = 0
 
-for iter,row in train_q.iterrows():
-    type = row[0]
-    contents = row[1]
+while l < 100:
+    topicData = {}
+    x_train_q, x_test_q, y_train_q, y_test_q = train_test_split(inputDataFrame["TYPE"],inputDataFrame["TEXT"], test_size=0.3) #create questions training data
+    train_q = pd.concat([x_train_q,y_train_q],axis=1)
+    test_q = pd.concat([x_test_q,y_test_q],axis=1)
 
-    if str(type) not in topicData.keys():
-        topicData[str(type)] = AIType()
+    for iter,row in train_q.iterrows():
+        type = row[0]
+        contents = row[1]
 
-    topicData[str(type)].Append(contents)
+        if str(type) not in topicData.keys():
+            topicData[str(type)] = AIType()
 
-for topic in topicData:
-    classItem = topicData[topic]
-    bin = []
-    trainingSet = classItem.ReturnTrain()
+        topicData[str(type)].Append(RemoveBadTokens(contents))
 
-    for x in trainingSet:
-        nlpDoc = nlp(x)
-        bin.append(nlpDoc)
+    for topic in topicData:
+        classItem = topicData[topic]
+        bin = []
+        trainingSet = classItem.ReturnTrain()
 
-    topicData[topic].CreateDoc(bin)
+        for x in trainingSet:
+            nlpDoc = nlp(x)
+            bin.append(nlpDoc)
 
-score = 0
-counter = 0
-for iter,row in test_q.iterrows():
-    realType = row[0]
-    contents = nlp(row[1])
+        topicData[topic].CreateDoc(bin)
 
-    gTopic = "Unknown"
-    gTopicScore = 0.0
-    for top in topicData:
-        comparisonVal = topicData[top].ReturnSim(contents)
+    score = 0
+    counter = 0
+    for iter,row in test_q.iterrows():
+        realType = row[0]
+        contents = nlp(RemoveBadTokens(row[1]))
 
-        if comparisonVal > gTopicScore:
-            gTopic = top
-            gTopicScore = comparisonVal
+        gTopic = "Unknown"
+        gTopicScore = 0.0
+        for top in topicData:
+            comparisonVal = topicData[top].ReturnSim(contents)
 
-    if gTopic == realType:
-        score = score + 1
-    counter = counter + 1
+            if comparisonVal > gTopicScore:
+                gTopic = top
+                gTopicScore = comparisonVal
+
+        if gTopic == realType:
+            score = score + 1
+        counter = counter + 1
+
+    print(str(round((score / counter) * 100, 4)))
+
+    l = l + 1
 
 print("Accuracy: " + str(round((score / counter)*100,2)) + "%")
 
 print("Hi! I'm the T. Bank virtual assistant! Please describe your problem and i'll do my best to direct you where you need to go!")
 
 while True:
-    inVal = nlp(input())
+    inVal = nlp(RemoveBadTokens(input()))
 
     gTopic = "UNKNOWN" #The predicted topic
     gSecTopic = "UNKNOWN" #The second predicted topic
