@@ -4,3 +4,5 @@ These libraries can be found in the requirements.txt file.
 To quickly install the library necessary, use the following command:
 
 pip install -r requirements.txt
+
+(this may take some time as there are a lot of required files)
