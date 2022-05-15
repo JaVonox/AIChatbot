@@ -9,6 +9,7 @@ import warnings
 warnings.filterwarnings("ignore") #A lot of the libraries here print out warnings for things like future depreciation. Since this isnt an issue, we can just disable them.
 
 mode = "COSINE" #Modes to use different similarity equations - COSINE/EUCLID/PEARSON
+print("Training...")
 
 class AIType: #Stores the model training data + the doc file
     def __init__(self):
